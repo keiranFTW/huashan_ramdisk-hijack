@@ -15,6 +15,7 @@ To install, you must have your phone plugged in with ADB enabled, then execute i
 Credits:
 
 Implementation - Peter Nyilas - dh.harald@XDA -  https://github.com/dh-harald
+
 2nd init - https://github.com/a853/a853_2nd_init/
 
 
