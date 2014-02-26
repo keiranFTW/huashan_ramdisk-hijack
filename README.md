@@ -4,6 +4,7 @@ huashan_ramdisk-hijack
 Ramdisk Hijack for the Xperia SP (huashan) by keiranFTW & others
 
 Ramdisk included is stock sony 4.3 edited to work with hijack
+
 Ramdisk root file contents go at ramdisk-hijack/hijack/ramdisk/
 
 To use:
