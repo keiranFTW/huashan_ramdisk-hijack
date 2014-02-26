@@ -1,0 +1,105 @@
+import init.sony-platform.rc
+import init.sony.usb.rc
+
+on init
+    chmod 0664 /proc/rdtag
+    chown root system /proc/rdtag
+
+on boot
+    # Override the value set in rootdir/init.rc
+    
+
+    # Configure coredumps
+    
+    
+
+    exec /system/bin/taimport property
+
+# FATSecurity:Start suntrold
+on post-fs
+    # Change to socket location on libkeyctrl/suntory for /data encryption
+    mkdir /dev/socket/suntory 0755 system system
+
+on post-fs-data
+    mkdir /data/pc 700 radio radio
+    mkdir /data/tombstones 0755 system system
+    mkdir /data/tombstones/vendor 0755 system system
+    mkdir /data/crashsms 0711 system system
+    mkdir /data/crashsms/crashes 0755 system system
+    mkdir /data/app-skin 0771 system system
+    
+    # Remove lost+found in user & userdebug
+    exec /system/bin/rm -r /data/lost+found
+    
+    mkdir /data/lost+found 0770 root root
+    exec /system/bin/rm -r /cache/lost+found
+    
+    mkdir /cache/lost+found 0770 root root
+    mkdir /data/smime 0770 root smime_keystore
+
+on property:dev.bootcomplete=1
+    start fota-snoop
+
+# klogger and klogrouter service switch
+on property:persist.sys.kernel.log=logcat
+    stop klogger
+    start klogrouter
+# Fast Dormancy
+service fast-dormancy /system/bin/fast-dormancy
+    user root
+    group root inet net_raw net_admin
+    class main
+
+on property:ro.semc.enable.fast_dormancy=false
+   stop fast-dormancy
+
+on property:persist.sys.kernel.log=file
+    stop klogrouter
+    start klogger
+
+on property:persist.sys.kernel.log=disable
+    stop klogger
+    stop klogrouter
+
+# klogger service
+service klogger /system/bin/kernel_log_redirector file
+    oneshot
+    disabled
+
+# klogrouter service
+service klogrouter /system/bin/kernel_log_redirector logcat
+    oneshot
+    disabled
+
+service suntrold /system/bin/suntrold
+    user system
+    group system
+    oneshot
+    class main
+
+service secchan /system/bin/secchand
+    user root
+    group root
+    class core
+
+service ric /system/bin/ric
+    user root
+    group root
+    class main
+
+# Sony: FOTA snooping
+service fota-snoop /system/bin/fota-snoop
+    class main
+    group cache
+    oneshot
+    disabled
+
+#Start crashmonitor native service
+
+
+# Native helper for SuperStamina
+service xssm /system/bin/xssm
+    class main
+    socket xssm stream 0660 root system
+    socket prmd stream 0666 root system
+    socket xssm_wakelock_socket stream 0660 root system

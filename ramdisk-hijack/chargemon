@@ -1,0 +1,29 @@
+#!/system/bin/sh
+
+#
+# ramdisk hijack for Xperia SP 4.3 version
+# by Peter Nyilas - dh.harald@XDA
+#
+# credits
+# 2nd-init: https://github.com/a853/a853_2nd_init/
+# idea: KeiranFTW@XDA
+# recoveries for Xperia SP: cray_Doze, davidmarco, dssmex
+# root/recovery ramdisk: CyanogenMod team
+#
+# To enter recovery: press vol- during blue light
+# Default: hijacks rootfs, and extract CM ramdisk for CM10.2
+# 
+# Use: copy files to /systeb/bin and fix permissions...
+#
+
+#
+# 26/02/14 keiranFTW - changes for busybox
+#
+export PATH=/system/xbin:/system/bin:/sbin/:bin
+
+mount -o remount,rw /
+mkdir /tmp/
+cd /tmp
+tar -xf /system/bin/hijack.tar
+for i in `busybox --list` ; do ln -s /tmp/busybox $i ; done
+exec /tmp/hijack.sh

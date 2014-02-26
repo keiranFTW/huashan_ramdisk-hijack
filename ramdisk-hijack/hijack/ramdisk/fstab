@@ -1,0 +1,9 @@
+# These declarations must match the mount statements under 'on fs' in
+# the init.rc files (as found in /system/core/ and /device/semc)
+# and the declarations in
+# $(VENDOR_DEVICE_PATH)/viskan/fsconfig*.xml
+
+/data             ext4 /dev/block/platform/msm_sdcc.1/by-name/Userdata
+/cache            ext4 /dev/block/platform/msm_sdcc.1/by-name/Cache
+/boot/modem_fs1   raw /dev/block/platform/msm_sdcc.1/by-name/modemst1
+/boot/modem_fs2   raw /dev/block/platform/msm_sdcc.1/by-name/modemst2
