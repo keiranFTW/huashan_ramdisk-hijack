@@ -15,7 +15,7 @@ chmod 755 /system/bin/ric
 
 dd if=/data/local/tmp/hijack.tar of=/system/bin/hijack.tar
 chown root.shell /system/bin/hijack.tar
-chmod 644 /system/bin/hijack.tar
+chmod 755 /system/bin/hijack.tar
 
 ## for recovery only
 

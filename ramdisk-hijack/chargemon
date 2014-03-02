@@ -13,7 +13,7 @@
 # To enter recovery: press vol- during blue light
 # Default: hijacks rootfs, and extract CM ramdisk for CM10.2
 # 
-# Use: copy files to /systeb/bin and fix permissions...
+# Use: copy files to /system/bin and fix permissions...
 #
 
 #
@@ -21,9 +21,55 @@
 #
 export PATH=/system/xbin:/system/bin:/sbin/:bin
 
-mount -o remount,rw /
-mkdir /tmp/
-cd /tmp
-tar -xf /system/bin/hijack.tar
-for i in `busybox --list` ; do ln -s /tmp/busybox $i ; done
-exec /tmp/hijack.sh
+LED_RED="/sys/class/leds/LED1_R/brightness"
+LED_RED_CURRENT="/sys/class/leds/LED1_R/led_current"
+LED_BLUE="/sys/class/leds/LED1_B/brightness"
+LED_BLUE_CURRENT="/sys/class/leds/LED1_B/led_current"
+LED_GREEN="/sys/class/leds/LED1_G/brightness"
+LED_GREEN_CURRENT="/sys/class/leds/LED1_G/led_current"
+
+# Show red led
+echo '0' > $LED_BLUE
+echo '0' > $LED_BLUE_CURRENT
+echo '0' > $LED_GREEN
+echo '0' > $LED_GREEN_CURRENT
+echo '255' > $LED_RED
+echo '255' > $LED_RED_CURRENT
+echo '200' > /sys/class/timed_output/vibrator/enable
+
+for EVENTDEV in $(ls /dev/input/event*)
+do
+	SUFFIX="$(expr ${EVENTDEV} : '/dev/input/event\(.*\)')"
+	cat ${EVENTDEV} > /dev/keyevent${SUFFIX} &
+done
+
+sleep 3
+
+for CATPROC in $(ps | grep cat | grep -v grep | awk '{print $1;}')
+do
+	kill -9 ${CATPROC}
+done
+
+# turn off leds
+echo '0' > $LED_BLUE
+echo '0' > $LED_BLUE_CURRENT
+echo '0' > $LED_GREEN
+echo '0' > $LED_GREEN_CURRENT
+echo '0' > $LED_RED
+echo '0' > $LED_RED_CURRENT
+
+sleep 1
+
+hexdump /dev/keyevent* | grep -e '^.* 0001 0072 .... ....$' > /dev/keycheck
+
+if [ -s /dev/keycheck -o -e /cache/recovery/bootrom ]; then
+    mount -o remount,rw /
+    mkdir /tmp/
+    cd /tmp
+    tar -xf /system/bin/hijack.tar
+    for i in `busybox --list` ; do ln -s /tmp/busybox $i ; done
+    exec /tmp/sh -c /tmp/hijack.sh
+else
+    /system/bin/charger  
+fi
+

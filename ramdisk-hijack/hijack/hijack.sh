@@ -1,4 +1,4 @@
-#!/tmp/ash
+#!/tmp/sh
 
 export PATH=/tmp:$PATH
 
@@ -13,23 +13,24 @@ clean_root () {
 	mount -o remount,rw /
 	cd /
 # Stop services
-
-	for SVCRUNNING in $(getprop | ${GREP} -E '^\[init\.svc\..*\]: \[running\]')
+    echo "======= PL: stop services =======" > /dev/kmsg
+	for SVCRUNNING in $(getprop | grep -E '^\[init\.svc\..*\]: \[running\]')
 	do
-		SVCNAME=$(${EXPR} ${SVCRUNNING} : '\[init\.svc\.\(.*\)\]:.*')
-		stop ${SVCNAME}
+		SVCNAME=$(expr ${SVCRUNNING} : '\[init\.svc\.\(.*\)\]:.*')
+		stop ${SVCNAME} > /dev/kmsg
 	done
 
-	for RUNNINGPRC in $(ps | grep /system/bin | grep -v grep | grep -v chargemon | awk '{print $1}' ) 
-	do
-		kill -9 $RUNNINGPRC
-	done
-
-	for RUNNINGPRC in $(ps | grep /sbin/ | grep -v grep | awk '{print $1}' )
+	for RUNNINGPRC in $(ps | grep /system/bin | grep -v grep | grep -v chargemon | awk '{print $2}' ) 
 	do
 		kill -9 $RUNNINGPRC
 	done
 
+	for RUNNINGPRC in $(ps | grep /sbin/ | grep -v grep | awk '{print $2}' )
+	do
+		kill -9 $RUNNINGPRC
+	done
+    echo "======= PL: ps after stop =======" > /dev/kmsg
+    ps > /dev/kmsg
 # umount
 	umount /storage/emulated/legacy/Android/obb
 	umount /storage/emulated/legacy
@@ -41,16 +42,23 @@ clean_root () {
 	umount /storage/emulated
 	umount /lta-label
 	umount /mnt/idd
-	umount /cache
-	umount /data
-	umount /system
+
+    umount -f /data/idd
+    umount -f /data
+    umount -f /cache
+    umount -f /system
 
 	umount /mnt/obb
 	umount /mnt/asec
 	umount /mnt/secure
 	umount /acct
-
+    echo "======= PL: umount result: =======" > /dev/kmsg
+    mount > /dev/kmsg
+    rm -r /sbin
+    rm init
 	rm sdcard etc init* uevent* default*
+    echo "======= PL: after directory change =======" > /dev/kmsg
+    ls > /dev/kmsg
 }
 
 # Trigger short vibration
@@ -103,7 +111,7 @@ then
 	rm /cache/recovery/boot
 	clean_root
 	cd /
-	tar xf /tmp/recovery.tar
+	tar -xf /tmp/recovery.tar
 	sleep 1
 
 	# turn off leds
@@ -113,15 +121,16 @@ then
 	echo '0' > $LED_GREEN_CURRENT
 	echo '0' > $LED_RED
 	echo '0' > $LED_RED_CURRENT
-
-	/tmp/2nd-init
+    echo "======= PL: chroot =======" > /dev/kmsg
+	chroot / /init > /dev/kmsg
 	sleep 5
 else
 	clean_root
 	cd /
-	tar xf /tmp/jelly.tar
+	tar -xf /tmp/jelly.tar
 	sleep 1
-	/tmp/2nd-init
+    echo "======= PL: chroot =======" > /dev/kmsg
+	chroot / /init > /dev/kmsg
 	sleep 5
 fi
 	

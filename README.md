@@ -17,7 +17,7 @@ Credits:
 
 Implementation - Peter Nyilas - dh.harald@XDA -  https://github.com/dh-harald
 
-2nd init - https://github.com/a853/a853_2nd_init/
+2nd init - https://github.com/a853/a853_2nd_init/ - no longer used
 
 
 
