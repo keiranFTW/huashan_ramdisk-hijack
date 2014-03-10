@@ -1,11 +1,11 @@
 #!/bin/bash
 
 cd ramdisk-hijack/hijack
-if [ -e jelly.tar ]; then
-    rm jelly.tar
+if [ -e cm.tar ]; then
+    rm cm.tar
 fi
 cd ramdisk
-tar -cvzf ../jelly.tar *
+tar -cvzf ../cm.tar *
 cd ../..
 if [ -e hijack.tar ]; then
     rm hijack.tar
@@ -14,5 +14,4 @@ cd hijack
 tar -cvzf ../hijack.tar $(ls | grep -v "ramdisk")
 cd ../..
 echo "Done."
-read
 

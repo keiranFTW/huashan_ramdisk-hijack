@@ -1,23 +1,40 @@
 huashan_ramdisk-hijack
 ======================
 
-Ramdisk Hijack for the Xperia SP (huashan) by keiranFTW & others
 
-Ramdisk included is stock sony 4.3 edited to work with hijack
 
-Ramdisk root file contents go at ramdisk-hijack/hijack/ramdisk/
+Ramdisk hijack for Xperia SP to hijack ramdisk in order to run AOSP ROMs (4.3)
 
-To use:
+Usage: use setup.sh to create hijack.tar, then place in build environment.
 
-To set up the process run setup.sh
+Use with:
 
-To install, you must have your phone plugged in with ADB enabled, then execute install.sh, you will have to accept a superuser prompt on your phone.
+https://github.com/keiranFTW/android_vendor_sony
+
+https://github.com/keiranFTW/android_device_sony_huashan
+
+
+and your android buildsystem
+
+
 
 Credits:
 
-Implementation - Peter Nyilas - dh.harald@XDA -  https://github.com/dh-harald
+Initial working implementation: bagyusz, dh.harald on xda
 
-2nd init - https://github.com/a853/a853_2nd_init/ - no longer used
+Recovery for Xperia SP: cray_Doze, davidmarco, dssmex
+
+root/recovery ramdisk: FreeXperia, CyanogenMod team
+
+
+
+To enter recovery press volume down button during blue LED illumination otherwise rootfs will be hijacked and CM ramdisk loaded and chroot to new init.
+
+
+
+
+
+
 
 
 

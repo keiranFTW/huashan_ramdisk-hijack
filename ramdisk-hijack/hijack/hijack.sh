@@ -9,15 +9,19 @@ LED_BLUE_CURRENT="/sys/class/leds/LED1_B/led_current"
 LED_GREEN="/sys/class/leds/LED1_G/brightness"
 LED_GREEN_CURRENT="/sys/class/leds/LED1_G/led_current"
 
-clean_root () {
-	mount -o remount,rw /
-	cd /
-# Stop services
-    echo "======= PL: stop services =======" > /dev/kmsg
-	for SVCRUNNING in $(getprop | grep -E '^\[init\.svc\..*\]: \[running\]')
+
+boot_recovery (){
+    mount -o remount,rw /
+    cd /
+    export TZ="$(getprop persist.sys.timezone)"
+    /system/bin/time_daemon
+    sleep 5
+    kill -9 $(ps | grep time_daemon | grep -v grep | awk -F' ' '{print $1}')
+
+	for SVCRUNNING in $(getprop | grep -E '^\[init\.svc\..*\]: \[running\]' | grep -v ueventd)
 	do
 		SVCNAME=$(expr ${SVCRUNNING} : '\[init\.svc\.\(.*\)\]:.*')
-		stop ${SVCNAME} > /dev/kmsg
+		stop ${SVCNAME}
 	done
 
 	for RUNNINGPRC in $(ps | grep /system/bin | grep -v grep | grep -v chargemon | awk '{print $2}' ) 
@@ -29,36 +33,90 @@ clean_root () {
 	do
 		kill -9 $RUNNINGPRC
 	done
-    echo "======= PL: ps after stop =======" > /dev/kmsg
-    ps > /dev/kmsg
-# umount
+
+    rm -r /sbin
+    rm sdcard etc init* uevent* default*
+
+    echo on init > /tz.conf
+    echo export TZ "$(getprop persist.sys.timezone)" >> /tz.conf
+    chmod 750 /tz.conf
+    tar cf /zoneinfo.tar /system/usr/share/zoneinfo
+}
+boot_rom () {
+	mount -o remount,rw rootfs /
+	cd /
+
+	for SVCRUNNING in $(getprop | grep -E '^\[init\.svc\..*\]: \[running\]' )
+	do
+		SVCNAME=$(expr ${SVCRUNNING} : '\[init\.svc\.\(.*\)\]:.*')
+		stop ${SVCNAME}
+		killall -9 ${SVCNAME}
+	done
+
+	for RUNNINGPRC in $(ps | grep /system/bin | grep -v grep | grep -v chargemon | awk '{print $2}' ) 
+	do
+		killall -9 $RUNNINGPRC
+	done
+
+	for RUNNINGPRC in $(ps | grep /sbin | grep -v grep | awk '{print $2}' )
+	do
+		killall -9 $RUNNINGPRC
+	done
+
+    umount -l /dev/block/mmcblk0p6
+    umount -l /dev/block/mmcblk0p7
+    umount -l /dev/block/mmcblk0p13
+    umount -l /dev/block/mmcblk0p15
+    umount -l /dev/block/mmcblk0p10
+    umount -l /dev/block/mmcblk0p14
+    umount -l /dev/block/mmcblk0p12
+    umount -l /dev/block/mmcblk1p1
+
+	umount /system
+	umount /data
+	umount /mnt/idd
+	umount /cache
+	umount /lta-label
+	umount /sdcard
+	umount /mnt/sdcard
+	umount /storage/sdcard0
+	umount /sdcard1
+	umount /ext_card
+	umount /storage/sdcard1
+	umount /mnt/usbdisk
+	umount /usbdisk
+	umount /storage/usbdisk
 	umount /storage/emulated/legacy/Android/obb
 	umount /storage/emulated/legacy
 	umount /storage/emulated/0/Android/obb
 	umount /storage/emulated/0
-	umount /storage/removable/sdcard1
-	umount /storage/emulated/legacy
-	umount /mnt/shell/emulated
 	umount /storage/emulated
-	umount /lta-label
-	umount /mnt/idd
-
-    umount -f /data/idd
-    umount -f /data
-    umount -f /cache
-    umount -f /system
-
+	umount /storage/removable/sdcard1
+	umount /storage/removable/usbdisk
+	umount /storage/removable
+	umount /storage
+	umount /mnt/shell/emulated/0
+	umount /mnt/shell/emulated
+	umount /mnt/shell
 	umount /mnt/obb
 	umount /mnt/asec
+	umount /mnt/secure/staging
 	umount /mnt/secure
+	umount /mnt
 	umount /acct
-    echo "======= PL: umount result: =======" > /dev/kmsg
-    mount > /dev/kmsg
-    rm -r /sbin
-    rm init
-	rm sdcard etc init* uevent* default*
-    echo "======= PL: after directory change =======" > /dev/kmsg
-    ls > /dev/kmsg
+	umount /dev/cpuctl
+	umount /dev/pts
+	umount /dev
+	umount /sys/fs/selinux
+	umount /sys/kernel/debug
+	umount /sys
+	umount /proc
+
+	cd /
+	rm -r /sbin
+	rm -r /storage
+	rm -r /mnt
+	rm -f sdcard sdcard1 ext_card sepolicy seapp_contexts property_contexts file_contexts crashtag mr.log fstab* init* ueventd* default*
 }
 
 # Trigger short vibration
@@ -79,7 +137,7 @@ done
 
 sleep 3
 
-for CATPROC in $(ps | grep cat | grep -v grep | awk '{print $1;}')
+for CATPROC in $(ps | grep cat | grep -v grep | awk '{print $2;}')
 do
 	kill -9 ${CATPROC}
 done
@@ -109,7 +167,7 @@ then
 	echo '0' > $LED_RED_CURRENT
 
 	rm /cache/recovery/boot
-	clean_root
+	boot_recovery
 	cd /
 	tar -xf /tmp/recovery.tar
 	sleep 1
@@ -122,15 +180,15 @@ then
 	echo '0' > $LED_RED
 	echo '0' > $LED_RED_CURRENT
     echo "======= PL: chroot =======" > /dev/kmsg
-	chroot / /init > /dev/kmsg
-	sleep 5
+	chroot / /init
+	sleep 2
 else
-	clean_root
+	boot_rom
 	cd /
-	tar -xf /tmp/jelly.tar
+	tar -xf /tmp/cm.tar
 	sleep 1
     echo "======= PL: chroot =======" > /dev/kmsg
-	chroot / /init > /dev/kmsg
-	sleep 5
+	chroot / /init
+	sleep 3
 fi
 	

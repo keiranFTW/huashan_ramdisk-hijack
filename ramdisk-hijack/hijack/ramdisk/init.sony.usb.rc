@@ -1,85 +1,148 @@
+# Copyright 2012 The Android Open Source Project
 #
-# init.sony.usb.rc
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 on init
-    # USB related initialization
-    write /sys/class/android_usb/android0/iSerial ${ro.serialno}
-    write /sys/class/android_usb/android0/f_rndis/vendorID 0fce
+    write /sys/class/android_usb/android0/f_rndis/manufacturer Sony
+    write /sys/class/android_usb/android0/f_rndis/vendorID 0FCE
     write /sys/class/android_usb/android0/f_rndis/wceis 1
 
-on post-fs-data
-    write /sys/class/android_usb/android0/f_mass_storage/inquiry_string "SONY    Mass Storage    0100"
-    write /sys/class/android_usb/android0/f_cdrom/cdrom_inquiry_string "SONY    CD-ROM          0100"
-    write /sys/class/android_usb/android0/f_mass_storage/serial_number ${ro.serialno}
-    write /sys/class/android_usb/android0/f_mass_storage/eui64_id 000AD90000000000
-    write /sys/class/android_usb/android0/f_mass_storage/lun/nofua 1
-    write /sys/class/android_usb/android0/f_cdrom/lun/nofua 1
-
 on boot
-    # USB gadget initial setup
+    write /sys/class/android_usb/android0/iSerial ${ro.serialno}
     write /sys/class/android_usb/android0/iManufacturer ${ro.product.manufacturer}
-    write /sys/class/android_usb/android0/f_rndis/manufacturer ${ro.product.manufacturer}
     write /sys/class/android_usb/android0/iProduct ${ro.product.model}
 
-    # Disable C_A_D
-    exec system/bin/ctrlaltdel soft
-
-    
-
-on property:sys.usb.config=mass_storage
-   exec /init.usbmode.sh
-   stop adbd
-   setprop sys.usb.state ${sys.usb.config}
-
-on property:sys.usb.config=mass_storage,adb
-   exec /init.usbmode.sh
-   start adbd
-   setprop sys.usb.state ${sys.usb.config}
-
+# MTP
 on property:sys.usb.config=mtp
-   exec /init.usbmode.sh
-   stop adbd
-   setprop sys.usb.state ${sys.usb.config}
+    stop adbd
+    write /sys/class/android_usb/android0/enable 0
+    write /sys/class/android_usb/android0/idVendor 0FCE
+    write /sys/class/android_usb/android0/idProduct 0195
+    write /sys/class/android_usb/android0/bDeviceClass 0
+    write /sys/class/android_usb/android0/bDeviceSubClass 0
+    write /sys/class/android_usb/android0/bDeviceProtocol 0
+    write /sys/class/android_usb/android0/functions mtp
+    write /sys/class/android_usb/android0/enable 1
+    setprop sys.usb.state ${sys.usb.config}
 
 on property:sys.usb.config=mtp,adb
-   exec /init.usbmode.sh
-   start adbd
-   setprop sys.usb.state ${sys.usb.config}
+    write /sys/class/android_usb/android0/enable 0
+    write /sys/class/android_usb/android0/idVendor 0FCE
+    write /sys/class/android_usb/android0/idProduct 5195
+    write /sys/class/android_usb/android0/bDeviceClass 0
+    write /sys/class/android_usb/android0/bDeviceSubClass 0
+    write /sys/class/android_usb/android0/bDeviceProtocol 0
+    write /sys/class/android_usb/android0/functions mtp,adb
+    write /sys/class/android_usb/android0/enable 1
+    start adbd
+    setprop sys.usb.state ${sys.usb.config}
 
-on property:sys.usb.config=mtp,cdrom
-   exec /init.usbmode.sh
-   stop adbd
-   write /sys/class/android_usb/android0/f_cdrom/lun/file /system/etc/dop.iso
-   setprop sys.usb.state ${sys.usb.config}
-
-on property:sys.usb.config=mtp,cdrom,adb
-   exec /init.usbmode.sh
-   stop adbd
-   write /sys/class/android_usb/android0/f_cdrom/lun/file /system/etc/dop.iso
-   setprop sys.usb.state ${sys.usb.config}
-
+# rndis
 on property:sys.usb.config=rndis
-   exec /init.usbmode.sh
-   stop adbd
-   setprop sys.usb.state ${sys.usb.config}
+    stop adbd
+    write /sys/class/android_usb/android0/enable 0
+    write /sys/class/android_usb/android0/idVendor 0FCE
+    write /sys/class/android_usb/android0/idProduct 7195
+    write /sys/class/android_usb/android0/bDeviceClass 239
+    write /sys/class/android_usb/android0/bDeviceSubClass 2
+    write /sys/class/android_usb/android0/bDeviceProtocol 1
+    write /sys/class/android_usb/android0/functions rndis
+    write /sys/class/android_usb/android0/enable 1
+    setprop sys.usb.state ${sys.usb.config}
 
 on property:sys.usb.config=rndis,adb
-   exec /init.usbmode.sh
-   start adbd
-   setprop sys.usb.state ${sys.usb.config}
+    write /sys/class/android_usb/android0/enable 0
+    write /sys/class/android_usb/android0/idVendor 0FCE
+    write /sys/class/android_usb/android0/idProduct 8195
+    write /sys/class/android_usb/android0/bDeviceClass 239
+    write /sys/class/android_usb/android0/bDeviceSubClass 2
+    write /sys/class/android_usb/android0/bDeviceProtocol 1
+    write /sys/class/android_usb/android0/functions rndis,adb
+    write /sys/class/android_usb/android0/enable 1
+    start adbd
+    setprop sys.usb.state ${sys.usb.config}
 
-on property:sys.usb.config=ncm
-   exec /init.usbmode.sh
-   stop adbd
-   setprop sys.usb.state ${sys.usb.config}
+# PTP
+on property:sys.usb.config=ptp
+    stop adbd
+    write /sys/class/android_usb/android0/enable 0
+    write /sys/class/android_usb/android0/idVendor 0FCE
+    write /sys/class/android_usb/android0/idProduct 9195
+    write /sys/class/android_usb/android0/bDeviceClass 0
+    write /sys/class/android_usb/android0/bDeviceSubClass 0
+    write /sys/class/android_usb/android0/bDeviceProtocol 0
+    write /sys/class/android_usb/android0/functions ptp
+    write /sys/class/android_usb/android0/enable 1
+    setprop sys.usb.state ${sys.usb.config}
 
-on property:sys.usb.config=ncm,adb
-   exec /init.usbmode.sh
-   start adbd
-   setprop sys.usb.state ${sys.usb.config}
+on property:sys.usb.config=ptp,adb
+    write /sys/class/android_usb/android0/enable 0
+    write /sys/class/android_usb/android0/idVendor 0FCE
+    write /sys/class/android_usb/android0/idProduct A195
+    write /sys/class/android_usb/android0/bDeviceClass 0
+    write /sys/class/android_usb/android0/bDeviceSubClass 0
+    write /sys/class/android_usb/android0/bDeviceProtocol 0
+    write /sys/class/android_usb/android0/functions ptp,adb
+    write /sys/class/android_usb/android0/enable 1
+    start adbd
+    setprop sys.usb.state ${sys.usb.config}
 
-# Start usbeng
-service usbeng /system/bin/usbeng
-    class late_start
-    oneshot
+# mass storage
+on property:sys.usb.config=mass_storage
+    stop adbd
+    write /sys/class/android_usb/android0/enable 0
+    write /sys/class/android_usb/android0/idVendor 0FCE
+    write /sys/class/android_usb/android0/idProduct E195
+    write /sys/class/android_usb/android0/functions mass_storage
+    write /sys/class/android_usb/android0/enable 1
+    setprop sys.usb.state ${sys.usb.config}
+
+on property:sys.usb.config=mass_storage,adb
+    write /sys/class/android_usb/android0/enable 0
+    write /sys/class/android_usb/android0/idVendor 0FCE
+    write /sys/class/android_usb/android0/idProduct 6195
+    write /sys/class/android_usb/android0/functions mass_storage,adb
+    write /sys/class/android_usb/android0/enable 1
+    start adbd
+    setprop sys.usb.state ${sys.usb.config}
+
+# diag
+on property:sys.usb.config=diag
+    stop adbd
+    write /sys/class/android_usb/android0/enable 0
+    write /sys/class/android_usb/android0/idVendor 1004
+    write /sys/class/android_usb/android0/idProduct 631B
+    write /sys/class/android_usb/android0/bDeviceClass 239
+    write /sys/class/android_usb/android0/bDeviceSubClass 2
+    write /sys/class/android_usb/android0/bDeviceProtocol 1
+    write /sys/class/android_usb/android0/f_acm/acm_transports tty
+    write /sys/class/android_usb/android0/f_diag/clients diag,diag_mdm
+    write /sys/class/android_usb/android0/functions acm,diag,mtp,adb
+    write /sys/class/android_usb/android0/enable 1
+    start adbd
+    setprop sys.usb.state ${sys.usb.config}
+
+on property:sys.usb.config=diag,adb
+    stop adbd
+    write /sys/class/android_usb/android0/enable 0
+    write /sys/class/android_usb/android0/idVendor 1004
+    write /sys/class/android_usb/android0/idProduct 631B
+    write /sys/class/android_usb/android0/bDeviceClass 239
+    write /sys/class/android_usb/android0/bDeviceSubClass 2
+    write /sys/class/android_usb/android0/bDeviceProtocol 1
+    write /sys/class/android_usb/android0/f_acm/acm_transports tty
+    write /sys/class/android_usb/android0/f_diag/clients diag,diag_mdm
+    write /sys/class/android_usb/android0/functions acm,diag,mtp,adb
+    write /sys/class/android_usb/android0/enable 1
+    start adbd
+    setprop sys.usb.state ${sys.usb.config}
